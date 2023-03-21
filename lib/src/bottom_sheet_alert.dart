@@ -95,7 +95,7 @@ Future<T?> _showCupertinoBottomSheet<T>(
       Brightness? brightness
 }) {
   final defaultTextStyle =
-      Theme.of(context).textTheme.headline6 ?? TextStyle(fontSize: 20, color: (brightness ?? SchedulerBinding.instance.platformDispatcher.platformBrightness) == Brightness.light ? Colors.black : Colors.white);
+      TextStyle(fontSize: 20, color: (brightness ?? SchedulerBinding.instance.platformDispatcher.platformBrightness) == Brightness.light ? Colors.black : Colors.white);
   return showCupertinoModalPopup(
     context: context,
     barrierDismissible: isDismissible,
@@ -172,7 +172,7 @@ Future<T?> _showMaterialBottomSheet<T>(
       Brightness? brightness
 }) {
   final defaultTextStyle =
-      Theme.of(context).textTheme.headline6 ?? TextStyle(fontSize: 20, color: (brightness ?? SchedulerBinding.instance.platformDispatcher.platformBrightness) == Brightness.light ? Colors.black : Colors.white);
+      TextStyle(fontSize: 20, color: (brightness ?? SchedulerBinding.instance.platformDispatcher.platformBrightness) == Brightness.light ? Colors.black : Colors.white);
   final BottomSheetThemeData sheetTheme = Theme.of(context).bottomSheetTheme;
   return showModalBottomSheet<T>(
     context: context,
