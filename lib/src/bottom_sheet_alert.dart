@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:universal_io/io.dart';
 
 import 'bottom_sheet_action.dart';
@@ -30,6 +31,7 @@ Future<T?> showAdaptiveActionSheet<T>({
   Color? bottomSheetColor,
   double? androidBorderRadius,
   bool isDismissible = true,
+  Brightness? brightness
 }) async {
   assert(
     barrierColor != Colors.transparent,
@@ -45,6 +47,7 @@ Future<T?> showAdaptiveActionSheet<T>({
     bottomSheetColor,
     androidBorderRadius,
     isDismissible: isDismissible,
+    brightness: brightness
   );
 }
 
@@ -57,6 +60,7 @@ Future<T?> _show<T>(
   Color? bottomSheetColor,
   double? androidBorderRadius, {
   bool isDismissible = true,
+      Brightness? brightness
 }) {
   if (Platform.isIOS) {
     return _showCupertinoBottomSheet(
@@ -65,6 +69,7 @@ Future<T?> _show<T>(
       actions,
       cancelAction,
       isDismissible: isDismissible,
+      brightness: brightness
     );
   } else {
     return _showMaterialBottomSheet(
@@ -76,6 +81,7 @@ Future<T?> _show<T>(
       bottomSheetColor,
       androidBorderRadius,
       isDismissible: isDismissible,
+      brightness: brightness
     );
   }
 }
@@ -86,6 +92,7 @@ Future<T?> _showCupertinoBottomSheet<T>(
   List<BottomSheetAction> actions,
   CancelAction? cancelAction, {
   bool isDismissible = true,
+      Brightness? brightness
 }) {
   final defaultTextStyle =
       Theme.of(context).textTheme.headline6 ?? const TextStyle(fontSize: 20);
@@ -93,56 +100,61 @@ Future<T?> _showCupertinoBottomSheet<T>(
     context: context,
     barrierDismissible: isDismissible,
     builder: (BuildContext coxt) {
-      return CupertinoActionSheet(
-        title: title,
-        actions: actions.map((action) {
-          /// Modal Popup doesn't inherited material widget
-          /// so need to provide one in case trailing or
-          /// leading widget require a Material widget ancestor.
-          return Material(
-            color: Colors.transparent,
-            child: CupertinoActionSheetAction(
-              onPressed: () => action.onPressed(coxt),
-              child: Row(
-                children: [
-                  if (action.leading != null) ...[
-                    action.leading!,
-                    const SizedBox(width: 15),
-                  ],
-                  Expanded(
-                    child: DefaultTextStyle(
-                      style: defaultTextStyle,
-                      textAlign: action.leading != null
-                          ? TextAlign.start
-                          : TextAlign.center,
-                      child: action.title,
+      return CupertinoTheme(
+        data: CupertinoThemeData(
+          brightness: brightness
+        ),
+        child: CupertinoActionSheet(
+          title: title,
+          actions: actions.map((action) {
+            /// Modal Popup doesn't inherited material widget
+            /// so need to provide one in case trailing or
+            /// leading widget require a Material widget ancestor.
+            return Material(
+              color: Colors.transparent,
+              child: CupertinoActionSheetAction(
+                onPressed: () => action.onPressed(coxt),
+                child: Row(
+                  children: [
+                    if (action.leading != null) ...[
+                      action.leading!,
+                      const SizedBox(width: 15),
+                    ],
+                    Expanded(
+                      child: DefaultTextStyle(
+                        style: defaultTextStyle,
+                        textAlign: action.leading != null
+                            ? TextAlign.start
+                            : TextAlign.center,
+                        child: action.title,
+                      ),
                     ),
-                  ),
-                  if (action.trailing != null) ...[
-                    const SizedBox(width: 10),
-                    action.trailing!,
+                    if (action.trailing != null) ...[
+                      const SizedBox(width: 10),
+                      action.trailing!,
+                    ],
                   ],
-                ],
-              ),
-            ),
-          );
-        }).toList(),
-        cancelButton: cancelAction != null
-            ? CupertinoActionSheetAction(
-                onPressed: () {
-                  if (cancelAction.onPressed != null) {
-                    cancelAction.onPressed!(coxt);
-                  } else {
-                    Navigator.of(coxt).pop();
-                  }
-                },
-                child: DefaultTextStyle(
-                  style: defaultTextStyle.copyWith(color: Colors.lightBlue),
-                  textAlign: TextAlign.center,
-                  child: cancelAction.title,
                 ),
-              )
-            : null,
+              ),
+            );
+          }).toList(),
+          cancelButton: cancelAction != null
+              ? CupertinoActionSheetAction(
+                  onPressed: () {
+                    if (cancelAction.onPressed != null) {
+                      cancelAction.onPressed!(coxt);
+                    } else {
+                      Navigator.of(coxt).pop();
+                    }
+                  },
+                  child: DefaultTextStyle(
+                    style: defaultTextStyle.copyWith(color: Colors.lightBlue),
+                    textAlign: TextAlign.center,
+                    child: cancelAction.title,
+                  ),
+                )
+              : null,
+        ),
       );
     },
   );
@@ -157,6 +169,7 @@ Future<T?> _showMaterialBottomSheet<T>(
   Color? bottomSheetColor,
   double? androidBorderRadius, {
   bool isDismissible = true,
+      Brightness? brightness
 }) {
   final defaultTextStyle =
       Theme.of(context).textTheme.headline6 ?? const TextStyle(fontSize: 20);
@@ -179,75 +192,80 @@ Future<T?> _showMaterialBottomSheet<T>(
     ),
     builder: (BuildContext coxt) {
       final double screenHeight = MediaQuery.of(context).size.height;
-      return WillPopScope(
-        onWillPop: () async => isDismissible,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: screenHeight - (screenHeight / 10),
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                if (title != null) ...[
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Center(child: title),
-                  ),
-                ],
-                ...actions.map<Widget>((action) {
-                  return InkWell(
-                    onTap: () => action.onPressed(coxt),
-                    child: Padding(
+      return Theme(
+        data: ThemeData(
+          brightness: brightness
+        ),
+        child: WillPopScope(
+          onWillPop: () async => isDismissible,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: screenHeight - (screenHeight / 10),
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  if (title != null) ...[
+                    Padding(
                       padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        children: [
-                          if (action.leading != null) ...[
-                            action.leading!,
-                            const SizedBox(width: 15),
-                          ],
-                          Expanded(
-                            child: DefaultTextStyle(
-                              style: defaultTextStyle,
-                              textAlign: action.leading != null
-                                  ? TextAlign.start
-                                  : TextAlign.center,
-                              child: action.title,
-                            ),
-                          ),
-                          if (action.trailing != null) ...[
-                            const SizedBox(width: 10),
-                            action.trailing!,
-                          ],
-                        ],
-                      ),
+                      child: Center(child: title),
                     ),
-                  );
-                }).toList(),
-                if (cancelAction != null)
-                  InkWell(
-                    onTap: () {
-                      if (cancelAction.onPressed != null) {
-                        cancelAction.onPressed!(coxt);
-                      } else {
-                        Navigator.of(coxt).pop();
-                      }
-                    },
-                    child: Center(
+                  ],
+                  ...actions.map<Widget>((action) {
+                    return InkWell(
+                      onTap: () => action.onPressed(coxt),
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
-                        child: DefaultTextStyle(
-                          style: defaultTextStyle.copyWith(
-                            color: Colors.lightBlue,
+                        child: Row(
+                          children: [
+                            if (action.leading != null) ...[
+                              action.leading!,
+                              const SizedBox(width: 15),
+                            ],
+                            Expanded(
+                              child: DefaultTextStyle(
+                                style: defaultTextStyle,
+                                textAlign: action.leading != null
+                                    ? TextAlign.start
+                                    : TextAlign.center,
+                                child: action.title,
+                              ),
+                            ),
+                            if (action.trailing != null) ...[
+                              const SizedBox(width: 10),
+                              action.trailing!,
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  if (cancelAction != null)
+                    InkWell(
+                      onTap: () {
+                        if (cancelAction.onPressed != null) {
+                          cancelAction.onPressed!(coxt);
+                        } else {
+                          Navigator.of(coxt).pop();
+                        }
+                      },
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: DefaultTextStyle(
+                            style: defaultTextStyle.copyWith(
+                              color: Colors.lightBlue,
+                            ),
+                            textAlign: TextAlign.center,
+                            child: cancelAction.title,
                           ),
-                          textAlign: TextAlign.center,
-                          child: cancelAction.title,
                         ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
